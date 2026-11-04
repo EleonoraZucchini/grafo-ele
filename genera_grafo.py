@@ -28,8 +28,11 @@ def main():
 
     with open(src, newline="", encoding="utf-8") as f:
         # il file ha spazi di riempimento attorno ai campi: li rimuovo
+        # nomi colonna in minuscolo; classe = sezione, annata = anno
+        alias = {"classe": "sezione", "annata": "anno"}
         persone = [
-            {k.strip(): v.strip() for k, v in r.items()}
+            {alias.get(k.strip().lower(), k.strip().lower()): v.strip()
+             for k, v in r.items()}
             for r in csv.DictReader(f, delimiter="\t")
         ]
 

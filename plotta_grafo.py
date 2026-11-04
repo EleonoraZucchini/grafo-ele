@@ -16,7 +16,7 @@ import networkx as nx
 from matplotlib.lines import Line2D
 
 SFONDO = "#fafaf7"
-COLORI_GRUPPO = {"A": "#4e79a7", "B": "#e8833a", "C": "#59a14f"}
+PALETTE = ["#4e79a7", "#e8833a", "#59a14f", "#b07aa1", "#e15759", "#76b7b2"]
 COLORE_ARCO = "#44475a"
 SPESSORE_PER_PESO = 3.5  # px di spessore per unità di peso
 
@@ -24,7 +24,7 @@ SPESSORE_PER_PESO = 3.5  # px di spessore per unità di peso
 def leggi(path):
     with open(path, newline="", encoding="utf-8") as f:
         return [
-            {k.strip(): v.strip() for k, v in r.items()}
+            {k.strip().lower(): v.strip() for k, v in r.items()}
             for r in csv.DictReader(f, delimiter="\t")
         ]
 
@@ -33,6 +33,10 @@ def main():
     persone = leggi(sys.argv[1] if len(sys.argv) > 1 else "persone.tsv")
     archi = leggi(sys.argv[2] if len(sys.argv) > 2 else "archi.tsv")
     out = sys.argv[3] if len(sys.argv) > 3 else "grafo.png"
+
+    # un colore per ogni gruppo presente nei dati
+    gruppi = sorted({p["gruppo"] for p in persone})
+    COLORI_GRUPPO = {g: PALETTE[i % len(PALETTE)] for i, g in enumerate(gruppi)}
 
     G = nx.Graph()
     for p in persone:
@@ -55,7 +59,7 @@ def main():
     for i, n in enumerate(isolati):
         pos[n] = (cx + (i - (len(isolati) - 1) / 2) * 0.6, y0)
 
-    fig, ax = plt.subplots(figsize=(9, 7), facecolor=SFONDO)
+    fig, ax = plt.subplots(figsize=(13, 10), facecolor=SFONDO)
     ax.set_facecolor(SFONDO)
 
     # archi: spessore e opacità proporzionali al peso, disegnati dal più
@@ -73,12 +77,12 @@ def main():
 
     # nodi
     nx.draw_networkx_nodes(
-        G, pos, ax=ax, node_size=4200,
+        G, pos, ax=ax, node_size=1500 if len(G) > 15 else 4200,
         node_color=[COLORI_GRUPPO.get(G.nodes[n]["gruppo"], "#999999") for n in G],
         edgecolors="white", linewidths=3,
     )
     nx.draw_networkx_labels(
-        G, pos, ax=ax, font_size=10, font_weight="bold", font_color="white"
+        G, pos, ax=ax, font_size=7 if len(G) > 15 else 10, font_weight="bold", font_color="white"
     )
 
     # legenda: colori = gruppo, spessori = peso
