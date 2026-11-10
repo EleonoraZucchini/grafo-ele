@@ -7,6 +7,7 @@ Uso: python3 plotta_grafo.py [persone.tsv] [archi.tsv] [grafo.png]
 """
 import csv
 import sys
+from itertools import combinations
 
 import matplotlib
 
@@ -19,6 +20,7 @@ SFONDO = "#fafaf7"
 PALETTE = ["#4e79a7", "#e8833a", "#59a14f", "#b07aa1", "#e15759", "#76b7b2"]
 COLORE_ARCO = "#44475a"
 SPESSORE_PER_PESO = 3.5  # px di spessore per unità di peso
+ATTRAZIONE_MINIMA = 0.2  # attrazione debole fra tutte le coppie nel layout (più alta = gruppi più vicini)
 
 
 def leggi(path):
@@ -48,7 +50,13 @@ def main():
     # gli isolati vengono messi in fila sotto il grafo
     isolati = list(nx.isolates(G))
     connessi = G.subgraph(n for n in G if n not in isolati)
-    pos = nx.spring_layout(connessi, seed=3, k=4.0, weight="weight", iterations=300)
+    # grafo usato solo per il layout: aggiungo una debole attrazione fra tutte
+    # le coppie, così i gruppi poco collegati fra loro non si allontanano troppo
+    L = nx.Graph()
+    L.add_nodes_from(connessi)
+    for u, v in combinations(connessi, 2):
+        L.add_edge(u, v, weight=G[u][v]["weight"] if G.has_edge(u, v) else ATTRAZIONE_MINIMA)
+    pos = nx.spring_layout(L, seed=3, k=2.0, weight="weight", iterations=300)
     if pos:
         ys = [y for _, y in pos.values()]
         xs = [x for x, _ in pos.values()]

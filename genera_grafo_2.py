@@ -2,8 +2,9 @@
 """Genera un grafo pesato dalle persone in persone.tsv.
 
 Pesi (per ogni coppia di persone), sommando le due componenti:
-  gruppo:  1 se stesso gruppo, 2 se stesso gruppo + stesso anno
-  scuola:  1 se stessa scuola, 2 se stessa scuola + sezione + anno
+  gruppo: 1 se stesso gruppo
+  classe: 2 se stessa scuola, stessa sezione e stesso anno
+Valori possibili: 1 (solo gruppo), 2 (solo classe), 3 (entrambi).
 Le coppie con peso totale 0 non hanno arco.
 
 Uso: python3 genera_grafo.py [persone.tsv] [archi.tsv]
@@ -14,12 +15,11 @@ from itertools import combinations
 
 
 def peso(a, b):
-    p = 0
-    if a["gruppo"] == b["gruppo"]:
-        p += 2 if a["anno"] == b["anno"] else 1
-    if a["scuola"] == b["scuola"]:
-        p += 2 if (a["sezione"] == b["sezione"] and a["anno"] == b["anno"]) else 1
-    return p
+    classe = (a["scuola"] == b["scuola"]
+              and a["sezione"] == b["sezione"]
+              and a["anno"] == b["anno"])
+    gruppo = a["gruppo"] == b["gruppo"]
+    return (2 if classe else 0) + (1 if gruppo else 0)
 
 
 def main():
